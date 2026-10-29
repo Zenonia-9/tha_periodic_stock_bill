@@ -1,6 +1,6 @@
 {
     "name": "THA Periodic Stock Vendor Bills",
-    "version": "19.0.1.0.8",
+    "version": "19.0.1.0.9",
     "category": "Accounting/Accounting",
     "summary": "Default periodic inventory purchases to stock and expense at closing",
     "author": "Thein Htoo Aung",

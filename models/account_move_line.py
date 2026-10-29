@@ -51,14 +51,18 @@ class AccountMoveLine(models.Model):
             raw_stock = line.with_company(company).product_id.product_tmpl_id._get_product_accounts()["stock_valuation"]
             if stock and stock != raw_stock:
                 raise UserError(_(
-                    "Stock Account on Vendor Bills: fiscal position redirects the stock "
-                    "account for %(product)s from %(source)s to %(destination)s. Native "
-                    "inventory closing uses the product's original stock account. Remove "
-                    "this stock-account mapping before posting, or disable this feature "
-                    "for the category and reconcile the accounting configuration.",
+                    "Cannot post this bill with Stock Account on Vendor Bills enabled. "
+                    "The fiscal position redirects %(product)s from its original stock "
+                    "account %(source)s to %(destination)s, but native inventory closing "
+                    "uses the original account. In Accounting ‣ Configuration ‣ Fiscal "
+                    "Positions, remove the mapping that redirects this stock account, then "
+                    "reselect the product line account and post again. Alternatively, ask "
+                    "an accounting manager to disable Stock Account on Vendor Bills for "
+                    "category %(category)s and reconcile its accounting setup.",
                     product=line.product_id.display_name,
                     source=raw_stock.display_name,
                     destination=stock.display_name,
+                    category=line.product_id.categ_id.display_name,
                 ))
             error = False
             if not valid_account(stock, ("asset_current",)):
@@ -93,8 +97,17 @@ class AccountMoveLine(models.Model):
                               "for native inventory closing.")
             if error:
                 raise UserError(_(
-                    "Stock Account on Vendor Bills: configuration error for %(product)s "
-                    "(category %(category)s, company %(company)s). %(error)s",
+                    "Cannot post this bill because Stock Account on Vendor Bills is "
+                    "enabled for %(product)s (category %(category)s, company %(company)s), "
+                    "but the inventory closing setup is incomplete. This feature posts "
+                    "the bill to the stock valuation account; native inventory closing "
+                    "later needs valid accounts and a journal to transfer that value to "
+                    "consumption. %(error)s Open the category's Accounting Properties "
+                    "to check its Stock Account, and the company's Accounting settings "
+                    "and stock account properties to complete the missing setup. Then "
+                    "retry posting. An accounting manager can instead disable Stock "
+                    "Account on Vendor Bills for this category if it should not use this "
+                    "workflow.",
                     product=line.product_id.display_name,
                     category=line.product_id.categ_id.display_name,
                     company=company.display_name,
